@@ -192,13 +192,13 @@ export default function SemanticMap() {
           </button>
         </div>
 
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="space-y-2">
           {semanticMap.blocks.map((block, i) => (
             <motion.div
               key={block.name}
-              initial={{ opacity: 0, y: 12 }}
+              initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.06 }}
+              transition={{ delay: i * 0.05 }}
             >
               <BlockCard block={block} />
             </motion.div>

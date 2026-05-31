@@ -61,7 +61,8 @@ export function buildSemanticMapPrompt(fileTreeText, repoName) {
 Analyze the file list for project "${repoName}" and group into 5-8 logical blocks.
 
 RULES:
-- Maximum 5 files per block (pick most representative ones)
+- 5 to 8 logical blocks total
+- Up to 10 files per block (include all relevant ones, not just the most important)
 - Each string value must be properly closed with a quote
 - Each property must be separated by a comma
 - No trailing commas
@@ -71,5 +72,5 @@ Files:
 ${fileTreeText.slice(0, 4000)}
 
 Required JSON shape:
-{"blocks":[{"name":"Auth","color":"auth","description":"User authentication and sessions","files":["src/auth.js","src/middleware.js"],"icon":"🔐"}]}`
+{"blocks":[{"name":"Auth","color":"auth","description":"User authentication and sessions","files":["src/auth.js","src/middleware.js","src/utils/token.js"],"icon":"🔐"}]}`
 }
