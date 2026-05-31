@@ -26,7 +26,7 @@ const MODES = {
   chat: {
     icon: MessageSquare,
     label: 'Chat',
-    placeholder: 'Ask anything about your code...',
+    placeholder: 'Ask about your code...',
     suggestions: [
       'What is the overall architecture?',
       'How does authentication work?',
@@ -38,7 +38,7 @@ const MODES = {
   where: {
     icon: Map,
     label: 'Where?',
-    placeholder: 'I want to add Stripe payments...',
+    placeholder: 'I want to add...',
     suggestions: [
       'I want to add user notifications',
       'I want to add a dashboard page',
@@ -51,7 +51,7 @@ const MODES = {
   debug: {
     icon: Bug,
     label: 'Debug',
-    placeholder: 'Paste your error message here...',
+    placeholder: 'Paste your error...',
     suggestions: [
       'TypeError: Cannot read property of undefined',
       'Module not found error',
@@ -101,7 +101,7 @@ export default function ChatPanel() {
     if (!userMsg || loading || !isConfigured()) return
 
     setInput('')
-    if (inputRef.current) inputRef.current.style.height = '56px'
+    if (inputRef.current) inputRef.current.style.height = '46px'
     const userContent = currentMode.buildPrompt(userMsg)
     const newMessages = [...messages, { role: 'user', content: userMsg }]
     setMessages(newMessages)
@@ -248,7 +248,7 @@ export default function ChatPanel() {
             placeholder={currentMode.placeholder}
             rows={1}
             className="flex-1 bg-transparent px-4 py-3 text-sm text-white/80 placeholder:text-white/30 resize-none focus:outline-none leading-relaxed overflow-hidden"
-            style={{ minHeight: 56, maxHeight: 140 }}
+            style={{ minHeight: 46, maxHeight: 140 }}
           />
           <button
             onClick={() => send()}
