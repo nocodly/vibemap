@@ -63,11 +63,28 @@ export default function SemanticMap() {
         onChunk: (_, full) => setRawStream(full),
       })
 
-      // Parse JSON from result
-      const jsonMatch = result.match(/\{[\s\S]*\}/)
-      if (!jsonMatch) throw new Error('Could not parse semantic map')
+      // Parse JSON — handle markdown code blocks and malformed JSON
+      let parsed = null
+      const attempts = [
+        // 1. JSON inside ```json ... ```
+        result.match(/```json\s*([\s\S]*?)\s*```/)?.[1],
+        // 2. JSON inside ``` ... ```
+        result.match(/```\s*([\s\S]*?)\s*```/)?.[1],
+        // 3. Raw JSON object
+        result.match(/\{[\s\S]*\}/)?.[0],
+      ]
 
-      const parsed = JSON.parse(jsonMatch[0])
+      for (const attempt of attempts) {
+        if (!attempt) continue
+        try {
+          parsed = JSON.parse(attempt)
+          break
+        } catch {
+          // try next
+        }
+      }
+
+      if (!parsed?.blocks) throw new Error('Could not parse semantic map — try again')
       setSemanticMap(parsed)
     } catch (err) {
       setError(err.message)

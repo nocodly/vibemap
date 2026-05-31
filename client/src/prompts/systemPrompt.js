@@ -63,20 +63,15 @@ File tree:
 ${fileTreeText.slice(0, 5000)}
 \`\`\`
 
-Return a JSON object in this exact format (no markdown, just JSON):
-{
-  "blocks": [
-    {
-      "name": "Authentication",
-      "color": "auth",
-      "description": "Handles user login, registration, JWT tokens",
-      "files": ["src/auth/login.js", "src/middleware/jwt.js"],
-      "icon": "🔐"
-    }
-  ]
-}
+IMPORTANT: Return ONLY a valid JSON object. No explanation, no markdown, no code blocks. Just the raw JSON.
 
-Color must be one of: auth, db, api, ui, config, util, payment, test
-Create 4-8 blocks that best represent this project's architecture.
-Only include files that actually exist in the tree above.`
+Format:
+{"blocks":[{"name":"Authentication","color":"auth","description":"Handles user login, registration, JWT tokens","files":["src/auth/login.js"],"icon":"🔐"}]}
+
+Rules:
+- color must be one of: auth, db, api, ui, config, util, payment, test
+- Create 4-8 blocks that best represent this project
+- Only include files that exist in the tree above
+- No trailing commas in JSON
+- All strings must use double quotes`
 }
