@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore.js'
 import { useRepoStore } from '../../store/repoStore.js'
@@ -9,25 +9,24 @@ import Sidebar from './Sidebar.jsx'
 import MainPanel from './MainPanel.jsx'
 import ChatPanel from './ChatPanel.jsx'
 import AISetupModal from '../onboarding/AISetupModal.jsx'
+import MobileNav from './MobileNav.jsx'
 
 export default function AppShell() {
   const { owner, repo } = useParams()
   const navigate = useNavigate()
   const { githubToken } = useAuthStore()
-  const { selectedRepo, setRepo, setFileTree, setLoading } = useRepoStore()
+  const { selectedRepo, setFileTree, setLoading } = useRepoStore()
   const { isConfigured } = useAIStore()
 
-  // If repo isn't set in store (direct URL access), go to repo select
+  // Mobile active panel: 'files' | 'map' | 'chat'
+  const [mobilePanel, setMobilePanel] = useState('map')
+
   useEffect(() => {
-    if (!selectedRepo) {
-      navigate('/repos', { replace: true })
-    }
+    if (!selectedRepo) navigate('/repos', { replace: true })
   }, [selectedRepo])
 
-  // Load file tree when repo is selected
   useEffect(() => {
     if (!selectedRepo || !githubToken) return
-
     async function loadTree() {
       setLoading('loadingTree', true)
       try {
@@ -40,26 +39,44 @@ export default function AppShell() {
         setLoading('loadingTree', false)
       }
     }
-
     loadTree()
   }, [selectedRepo, githubToken])
 
   return (
-    <div className="h-screen bg-bg-base flex flex-col overflow-hidden">
+    <div className="h-screen bg-[#0d0d0d] flex flex-col overflow-hidden">
       <Header />
 
-      <div className="flex-1 flex overflow-hidden">
-        {/* Left: File tree */}
-        <Sidebar />
+      {/* Desktop layout: 3 panels */}
+      <div className="flex-1 flex overflow-hidden md:flex">
 
-        {/* Center: Map or file viewer */}
-        <MainPanel />
+        {/* Sidebar — hidden on mobile unless mobilePanel=files */}
+        <div className={`
+          md:flex md:w-60 md:flex-shrink-0
+          ${mobilePanel === 'files' ? 'flex flex-1' : 'hidden md:flex'}
+        `}>
+          <Sidebar />
+        </div>
 
-        {/* Right: AI chat */}
-        <ChatPanel />
+        {/* Main panel — hidden on mobile unless mobilePanel=map */}
+        <div className={`
+          flex-1 overflow-hidden min-w-0
+          ${mobilePanel === 'map' ? 'flex flex-col' : 'hidden md:flex md:flex-col'}
+        `}>
+          <MainPanel />
+        </div>
+
+        {/* Chat panel — hidden on mobile unless mobilePanel=chat */}
+        <div className={`
+          md:flex md:w-72 md:flex-shrink-0
+          ${mobilePanel === 'chat' ? 'flex flex-1' : 'hidden md:flex'}
+        `}>
+          <ChatPanel />
+        </div>
       </div>
 
-      {/* AI setup modal — shows if AI not configured */}
+      {/* Mobile bottom nav */}
+      <MobileNav active={mobilePanel} onChange={setMobilePanel} />
+
       {!isConfigured() && <AISetupModal />}
     </div>
   )

@@ -8,7 +8,21 @@ import { buildSemanticMapPrompt } from '../../prompts/systemPrompt.js'
 import { Loader } from '../ui/Loader.jsx'
 import BlockCard from './BlockCard.jsx'
 
-// Convert nested file tree to flat text representation
+// Convert nested file tree to flat FULL paths — critical for AI to return correct paths
+function getAllFilePaths(node) {
+  if (!node?.children) return []
+  const paths = []
+  for (const child of Object.values(node.children)) {
+    if (child.type === 'dir') {
+      paths.push(...getAllFilePaths(child))
+    } else if (child.path) {
+      paths.push(child.path)
+    }
+  }
+  return paths
+}
+
+// Also keep indented version for display context
 function treeToText(node, prefix = '') {
   if (!node?.children) return ''
   let result = ''
@@ -39,7 +53,8 @@ export default function SemanticMap() {
     setRawStream('')
     setError(null)
 
-    const treeText = treeToText(fileTree)
+    // Use flat full paths so AI returns correct paths
+    const flatPaths = getAllFilePaths(fileTree).join('\n')
 
     try {
       const result = await streamChat({
@@ -48,7 +63,7 @@ export default function SemanticMap() {
         model,
         messages: [{
           role: 'user',
-          content: buildSemanticMapPrompt(treeText, selectedRepo?.full_name),
+          content: buildSemanticMapPrompt(flatPaths, selectedRepo?.full_name),
         }],
         onChunk: (_, full) => setRawStream(full),
       })
@@ -166,7 +181,7 @@ export default function SemanticMap() {
           </button>
         </div>
 
-        <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {semanticMap.blocks.map((block, i) => (
             <motion.div
               key={block.name}
