@@ -71,17 +71,15 @@ export default function SemanticMap() {
       })
       setRawResult(result)
 
-      // Smart JSON repair — handles truncated strings, arrays, objects
+      // Stack-based JSON repair — closes brackets in correct LIFO order
       function repairJson(str) {
         const start = str.indexOf('{')
         if (start === -1) return null
         let s = str.slice(start)
 
-        // Track structure using a state machine
+        const stack = [] // stores closing chars needed: '}' or ']'
         let inString = false
         let escaped = false
-        let braces = 0
-        let brackets = 0
 
         for (let i = 0; i < s.length; i++) {
           const c = s[i]
@@ -89,20 +87,18 @@ export default function SemanticMap() {
           if (c === '\\' && inString) { escaped = true; continue }
           if (c === '"') { inString = !inString; continue }
           if (inString) continue
-          if (c === '{') braces++
-          else if (c === '}') braces--
-          else if (c === '[') brackets++
-          else if (c === ']') brackets--
+          if (c === '{') stack.push('}')
+          else if (c === '[') stack.push(']')
+          else if (c === '}' || c === ']') stack.pop()
         }
 
-        // Close unclosed string first
+        // 1. Close unclosed string
         if (inString) s += '"'
-        // Remove trailing comma before closing
-        s = s.replace(/,\s*$/, '')
-        // Close open arrays and objects
-        s += ']'.repeat(Math.max(0, brackets))
-        s += '}'.repeat(Math.max(0, braces))
-        // Remove trailing commas before ] or }
+        // 2. Remove trailing comma
+        s = s.trimEnd().replace(/,\s*$/, '')
+        // 3. Close in correct LIFO order
+        s += stack.reverse().join('')
+        // 4. Remove trailing commas before ] or }
         s = s.replace(/,\s*([\]\}])/g, '$1')
 
         return s
