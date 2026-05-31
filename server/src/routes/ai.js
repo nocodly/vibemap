@@ -44,6 +44,7 @@ router.post('/chat', async (req, res) => {
       }
       requestBody = {
         model: model || 'gpt-4o-mini',
+        max_tokens: 4096,
         stream: true,
         messages: system
           ? [{ role: 'system', content: system }, ...messages]

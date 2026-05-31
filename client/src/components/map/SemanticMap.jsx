@@ -71,39 +71,52 @@ export default function SemanticMap() {
       })
       setRawResult(result)
 
-      // Reliable JSON extractor — counts brackets instead of regex
-      function extractJsonObject(str) {
+      // Smart JSON repair — handles truncated strings, arrays, objects
+      function repairJson(str) {
         const start = str.indexOf('{')
         if (start === -1) return null
-        let depth = 0
-        for (let i = start; i < str.length; i++) {
-          if (str[i] === '{') depth++
-          else if (str[i] === '}') {
-            depth--
-            if (depth === 0) return str.slice(start, i + 1)
-          }
-        }
-        // JSON incomplete — close all open brackets
-        const partial = str.slice(start)
-        const opens = (partial.match(/\[/g) || []).length
-        const closes = (partial.match(/\]/g) || []).length
-        const arrFix = ']'.repeat(Math.max(0, opens - closes))
-        return partial + arrFix + '}'
-      }
+        let s = str.slice(start)
 
-      function removeTrailingCommas(str) {
-        return str.replace(/,\s*([\]\}])/g, '$1')
+        // Track structure using a state machine
+        let inString = false
+        let escaped = false
+        let braces = 0
+        let brackets = 0
+
+        for (let i = 0; i < s.length; i++) {
+          const c = s[i]
+          if (escaped) { escaped = false; continue }
+          if (c === '\\' && inString) { escaped = true; continue }
+          if (c === '"') { inString = !inString; continue }
+          if (inString) continue
+          if (c === '{') braces++
+          else if (c === '}') braces--
+          else if (c === '[') brackets++
+          else if (c === ']') brackets--
+        }
+
+        // Close unclosed string first
+        if (inString) s += '"'
+        // Remove trailing comma before closing
+        s = s.replace(/,\s*$/, '')
+        // Close open arrays and objects
+        s += ']'.repeat(Math.max(0, brackets))
+        s += '}'.repeat(Math.max(0, braces))
+        // Remove trailing commas before ] or }
+        s = s.replace(/,\s*([\]\}])/g, '$1')
+
+        return s
       }
 
       let parsed = null
-      const raw = extractJsonObject(result)
+      const raw = repairJson(result)
 
       if (raw) {
-        for (const attempt of [raw, removeTrailingCommas(raw)]) {
-          try {
-            const p = JSON.parse(attempt)
-            if (p?.blocks?.length) { parsed = p; break }
-          } catch {}
+        try {
+          const p = JSON.parse(raw)
+          if (p?.blocks?.length) parsed = p
+        } catch (e) {
+          console.error('JSON parse error:', e.message, '\nRepaired JSON:', raw.slice(0, 200))
         }
       }
 
