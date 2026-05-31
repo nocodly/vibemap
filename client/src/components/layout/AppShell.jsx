@@ -67,7 +67,7 @@ export default function AppShell() {
 
         {/* Chat panel — hidden on mobile unless mobilePanel=chat */}
         <div className={`
-          md:flex md:w-72 md:flex-shrink-0
+          md:flex md:w-80 md:flex-shrink-0
           ${mobilePanel === 'chat' ? 'flex flex-1' : 'hidden md:flex'}
         `}>
           <ChatPanel />

@@ -17,17 +17,17 @@ export default function Header() {
     : null
 
   return (
-    <header className="h-11 border-b border-bg-border bg-bg-surface flex items-center px-4 gap-4 flex-shrink-0">
+    <header className="h-11 border-b border-bg-border bg-bg-surface flex items-center px-4 gap-3 flex-shrink-0 overflow-hidden">
       {/* Logo + breadcrumb */}
-      <div className="flex items-center gap-2 min-w-0">
+      <div className="flex items-center gap-2 min-w-0 flex-1">
         <button
           onClick={() => navigate('/repos')}
-          className="flex items-center gap-1.5 hover:opacity-70 transition-opacity"
+          className="flex items-center gap-1.5 hover:opacity-70 transition-opacity flex-shrink-0"
         >
           <div className="w-5 h-5 rounded bg-accent flex items-center justify-center">
             <Map size={11} className="text-white" />
           </div>
-          <span className="text-text-secondary text-xs">Vibemap</span>
+          <span className="text-text-secondary text-xs hidden sm:inline">Vibemap</span>
         </button>
 
         {selectedRepo && (
@@ -37,28 +37,31 @@ export default function Header() {
               href={selectedRepo.html_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-text-primary text-xs font-medium hover:text-accent transition-colors flex items-center gap-1 truncate"
+              className="text-text-primary text-xs font-medium hover:text-accent transition-colors flex items-center gap-1 truncate min-w-0"
             >
-              {selectedRepo.full_name}
+              <span className="truncate">{selectedRepo.full_name}</span>
               <ExternalLink size={10} className="text-text-muted flex-shrink-0" />
             </a>
           </>
         )}
       </div>
 
-      <div className="flex-1" />
-
-      {/* AI status */}
+      {/* AI status — full badge on desktop, green dot only on mobile */}
       {isConfigured() && (
-        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-bg-elevated border border-bg-border">
-          <div className="w-1.5 h-1.5 rounded-full bg-green-400" />
-          <span className="text-text-secondary text-xs">{providerName} · {modelLabel}</span>
-        </div>
+        <>
+          {/* Desktop */}
+          <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-bg-elevated border border-bg-border flex-shrink-0">
+            <div className="w-1.5 h-1.5 rounded-full bg-green-400" />
+            <span className="text-text-secondary text-xs whitespace-nowrap">{providerName} · {modelLabel}</span>
+          </div>
+          {/* Mobile — dot only */}
+          <div className="flex sm:hidden w-2 h-2 rounded-full bg-green-400 flex-shrink-0" />
+        </>
       )}
 
       {/* User avatar */}
       {user && (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 flex-shrink-0">
           <img src={user.avatar_url} alt={user.login} className="w-5 h-5 rounded-full" />
           <button
             onClick={() => { logout(); navigate('/') }}
