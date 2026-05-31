@@ -21,13 +21,14 @@ function shouldSkip(name) {
 }
 
 async function ghFetch(path, token) {
-  const res = await fetch(`${BASE}${path}`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      Accept: 'application/vnd.github+json',
-      'X-GitHub-Api-Version': '2022-11-28',
-    },
-  })
+  const headers = {
+    Accept: 'application/vnd.github+json',
+    'X-GitHub-Api-Version': '2022-11-28',
+  }
+  // Only add auth header when token is available (explore mode has no token)
+  if (token) headers.Authorization = `Bearer ${token}`
+
+  const res = await fetch(`${BASE}${path}`, { headers })
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({}))
@@ -65,18 +66,26 @@ export async function getFileTree(token, owner, repo, branch = 'HEAD') {
   return buildTree(files)
 }
 
-// Get file content (decoded from base64)
+// Get file content (decoded from base64, or via download_url for large files)
 export async function getFileContent(token, owner, repo, path) {
   const data = await ghFetch(
     `/repos/${owner}/${repo}/contents/${path}`,
     token
   )
 
+  // Normal files — base64 encoded
   if (data.encoding === 'base64') {
     return atob(data.content.replace(/\n/g, ''))
   }
 
-  return data.content
+  // Large files (>1MB) — GitHub returns download_url instead of content
+  if (data.download_url) {
+    const res = await fetch(data.download_url)
+    if (!res.ok) throw new Error(`Could not download file (${res.status})`)
+    return res.text()
+  }
+
+  return data.content || ''
 }
 
 // Get repo default branch
