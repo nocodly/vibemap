@@ -1,5 +1,6 @@
+import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Github, Map, FileCode, MessageSquare, Zap } from 'lucide-react'
+import { Github, Map, FileCode, MessageSquare, Zap, ArrowRight } from 'lucide-react'
 
 const GITHUB_CLIENT_ID = import.meta.env.VITE_GITHUB_CLIENT_ID
 const GITHUB_OAUTH_URL = `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&scope=repo&redirect_uri=${encodeURIComponent(window.location.origin + '/auth/callback')}`
@@ -28,6 +29,8 @@ const features = [
 ]
 
 export default function LandingPage() {
+  const navigate = useNavigate()
+
   return (
     <div className="min-h-screen bg-bg-base flex flex-col">
       {/* Header */}
@@ -72,16 +75,27 @@ export default function LandingPage() {
             Ask questions, explore files, understand architecture — instantly.
           </p>
 
-          <a
-            href={GITHUB_OAUTH_URL}
-            className="inline-flex items-center gap-3 px-6 py-3.5 bg-white text-gray-900 rounded-xl font-semibold text-sm hover:bg-gray-100 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
-          >
-            <Github size={18} />
-            Connect GitHub to get started
-          </a>
+          <div className="flex flex-col sm:flex-row items-center gap-3 justify-center">
+            <a
+              href={GITHUB_OAUTH_URL}
+              className="inline-flex items-center gap-3 px-6 py-3.5 bg-white text-gray-900 rounded-xl font-semibold text-sm hover:bg-gray-100 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <Github size={18} />
+              Connect GitHub
+            </a>
+
+            <button
+              onClick={() => navigate('/explore')}
+              className="inline-flex items-center gap-2 px-6 py-3.5 bg-accent/10 border border-accent/30 text-accent rounded-xl font-semibold text-sm hover:bg-accent/20 transition-all duration-200"
+            >
+              <Map size={16} />
+              Explore public repo
+              <ArrowRight size={14} />
+            </button>
+          </div>
 
           <p className="text-text-muted text-xs mt-3">
-            Free to use · Your code never leaves your computer
+            No login required for public repos · Your code never leaves your computer
           </p>
         </motion.div>
 

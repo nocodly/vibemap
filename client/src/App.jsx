@@ -7,6 +7,8 @@ import LandingPage from './components/onboarding/LandingPage.jsx'
 import AuthCallback from './components/onboarding/AuthCallback.jsx'
 import RepoSelect from './components/onboarding/RepoSelect.jsx'
 import AppShell from './components/layout/AppShell.jsx'
+import ExplorePage from './components/explore/ExplorePage.jsx'
+import ExploreShell from './components/explore/ExploreShell.jsx'
 
 export default function App() {
   const { githubToken, setUser, isAuthenticated } = useAuthStore()
@@ -36,6 +38,10 @@ export default function App() {
       <Route path="/repo/:owner/:repo/*" element={
         isAuthenticated() ? <AppShell /> : <Navigate to="/" replace />
       } />
+
+      {/* Public explore — no login needed */}
+      <Route path="/explore" element={<ExplorePage />} />
+      <Route path="/explore/:owner/:repo" element={<ExploreShell />} />
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

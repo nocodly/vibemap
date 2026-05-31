@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Send, MessageSquare, Sparkles } from 'lucide-react'
+import { Send, MessageSquare, Sparkles, Map, Bug, Plus } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAIStore } from '../../store/aiStore.js'
@@ -22,14 +22,49 @@ function treeToText(node, prefix = '') {
   return result
 }
 
-const SUGGESTIONS = [
-  'What is the overall architecture of this project?',
-  'How does authentication work here?',
-  'What are the main entry points?',
-  'Where is the database logic?',
-]
+const MODES = {
+  chat: {
+    icon: MessageSquare,
+    label: 'Chat',
+    placeholder: 'Ask anything about your code...',
+    suggestions: [
+      'What is the overall architecture?',
+      'How does authentication work?',
+      'What are the main entry points?',
+      'Where is the database logic?',
+    ],
+    buildPrompt: (input, context) => input,
+  },
+  where: {
+    icon: Map,
+    label: 'Where to add?',
+    placeholder: 'I want to add Stripe payments...',
+    suggestions: [
+      'I want to add user notifications',
+      'I want to add a dashboard page',
+      'I want to add email verification',
+      'I want to add an admin panel',
+    ],
+    buildPrompt: (input) =>
+      `I want to add the following feature to this project: "${input}"\n\nBased on the codebase structure, tell me:\n1. Which existing files should I modify and why\n2. Which new files should I create and where\n3. In what order should I make these changes\n\nBe specific with file paths and function names from the actual codebase.`,
+  },
+  debug: {
+    icon: Bug,
+    label: 'Debug error',
+    placeholder: 'Paste your error message here...',
+    suggestions: [
+      'TypeError: Cannot read property of undefined',
+      'Module not found error',
+      '404 Not Found on API call',
+      'CORS error on fetch request',
+    ],
+    buildPrompt: (input) =>
+      `I'm getting this error in my project:\n\n\`\`\`\n${input}\n\`\`\`\n\nBased on the codebase:\n1. What is the most likely cause of this error?\n2. Which specific file(s) and line(s) are involved?\n3. What is the exact fix I need to make?\n\nReference actual files and code from this project.`,
+  },
+}
 
 export default function ChatPanel() {
+  const [mode, setMode] = useState('chat')
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
@@ -38,6 +73,14 @@ export default function ChatPanel() {
 
   const { provider, apiKey, model, isConfigured } = useAIStore()
   const { selectedRepo, fileTree, semanticMap, openFile, fileContent } = useRepoStore()
+
+  const currentMode = MODES[mode]
+
+  // Clear messages when mode changes
+  useEffect(() => {
+    setMessages([])
+    setInput('')
+  }, [mode])
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -59,20 +102,22 @@ export default function ChatPanel() {
     if (!userMsg || loading || !isConfigured()) return
 
     setInput('')
+    const userContent = currentMode.buildPrompt(userMsg)
     const newMessages = [...messages, { role: 'user', content: userMsg }]
     setMessages(newMessages)
     setLoading(true)
-
-    // Add empty assistant message for streaming
     setMessages([...newMessages, { role: 'assistant', content: '' }])
 
     try {
+      const apiMessages = [
+        ...messages,
+        { role: 'user', content: userContent },
+      ]
+
       await streamChat({
-        provider,
-        apiKey,
-        model,
+        provider, apiKey, model,
         system: buildContext(),
-        messages: newMessages,
+        messages: apiMessages,
         onChunk: (_, full) => {
           setMessages([...newMessages, { role: 'assistant', content: full }])
         },
@@ -93,12 +138,12 @@ export default function ChatPanel() {
 
   if (!isConfigured()) {
     return (
-      <aside className="w-72 flex-shrink-0 border-l border-bg-border bg-bg-surface flex items-center justify-center p-6">
+      <aside className="w-72 flex-shrink-0 border-l border-[#1e1e1e] bg-[#111] flex items-center justify-center p-6">
         <div className="text-center">
-          <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center mx-auto mb-3">
-            <MessageSquare size={18} className="text-accent" />
+          <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center mx-auto mb-3">
+            <MessageSquare size={18} className="text-violet-400" />
           </div>
-          <p className="text-text-secondary text-xs leading-relaxed">
+          <p className="text-white/30 text-xs leading-relaxed">
             Add your AI key to chat with your codebase
           </p>
         </div>
@@ -107,71 +152,105 @@ export default function ChatPanel() {
   }
 
   return (
-    <aside className="w-72 flex-shrink-0 border-l border-bg-border bg-bg-surface flex flex-col overflow-hidden">
-      {/* Header */}
-      <div className="px-3 py-2.5 border-b border-bg-border flex items-center gap-2 flex-shrink-0">
-        <Sparkles size={12} className="text-accent" />
-        <span className="text-text-secondary text-xs font-medium">Code Assistant</span>
+    <aside className="w-72 flex-shrink-0 border-l border-[#1e1e1e] bg-[#111] flex flex-col overflow-hidden">
+      {/* Mode tabs */}
+      <div className="flex border-b border-[#1e1e1e] flex-shrink-0">
+        {Object.entries(MODES).map(([key, m]) => (
+          <button
+            key={key}
+            onClick={() => setMode(key)}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-[10px] font-medium transition-colors border-b-2 ${
+              mode === key
+                ? 'border-violet-500 text-violet-400 bg-violet-500/5'
+                : 'border-transparent text-white/30 hover:text-white/50'
+            }`}
+          >
+            <m.icon size={11} />
+            {m.label}
+          </button>
+        ))}
       </div>
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-3 space-y-3">
-        {messages.length === 0 ? (
-          <div className="space-y-2">
-            <p className="text-text-muted text-xs px-1 mb-3">Ask anything about your codebase:</p>
-            {SUGGESTIONS.map((s) => (
-              <button
-                key={s}
-                onClick={() => send(s)}
-                className="w-full text-left px-3 py-2 rounded-lg border border-bg-border hover:border-accent/30 hover:bg-bg-elevated text-text-secondary text-xs transition-colors leading-relaxed"
-              >
-                {s}
-              </button>
-            ))}
-          </div>
-        ) : (
-          messages.map((msg, i) => (
+        <AnimatePresence mode="wait">
+          {messages.length === 0 ? (
             <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              className={msg.role === 'user' ? 'flex justify-end' : ''}
+              key={mode}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="space-y-2"
             >
-              {msg.role === 'user' ? (
-                <div className="max-w-[85%] bg-accent/10 border border-accent/20 rounded-xl px-3 py-2 text-text-primary text-xs">
-                  {msg.content}
-                </div>
-              ) : (
-                <div className="text-text-secondary text-xs leading-relaxed prose prose-sm prose-invert max-w-none">
-                  <ReactMarkdown>{msg.content}</ReactMarkdown>
-                  {loading && i === messages.length - 1 && !msg.content && (
-                    <span className="inline-block w-1.5 h-3 bg-accent animate-pulse rounded" />
+              <p className="text-white/20 text-xs px-1 mb-3">
+                {mode === 'chat' && 'Ask anything about your codebase:'}
+                {mode === 'where' && 'What feature do you want to add?'}
+                {mode === 'debug' && 'Paste your error and I\'ll find the cause:'}
+              </p>
+              {currentMode.suggestions.map((s) => (
+                <button
+                  key={s}
+                  onClick={() => send(s)}
+                  className="w-full text-left px-3 py-2 rounded-lg border border-[#222] hover:border-[#333] hover:bg-white/[0.02] text-white/40 text-xs transition-colors leading-relaxed"
+                >
+                  {s}
+                </button>
+              ))}
+            </motion.div>
+          ) : (
+            <motion.div key="messages" className="space-y-3">
+              {messages.map((msg, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className={msg.role === 'user' ? 'flex justify-end' : ''}
+                >
+                  {msg.role === 'user' ? (
+                    <div className="max-w-[85%] bg-violet-500/10 border border-violet-500/20 rounded-xl px-3 py-2 text-white/80 text-xs">
+                      {msg.content}
+                    </div>
+                  ) : (
+                    <div className="text-white/50 text-xs leading-relaxed prose prose-sm prose-invert max-w-none">
+                      <ReactMarkdown>{msg.content}</ReactMarkdown>
+                      {loading && i === messages.length - 1 && !msg.content && (
+                        <span className="inline-block w-1.5 h-3 bg-violet-500 animate-pulse rounded" />
+                      )}
+                    </div>
                   )}
-                </div>
+                </motion.div>
+              ))}
+              {messages.length > 0 && (
+                <button
+                  onClick={() => setMessages([])}
+                  className="flex items-center gap-1 text-white/20 hover:text-white/40 text-[10px] transition-colors mx-auto"
+                >
+                  <Plus size={9} className="rotate-45" />
+                  New conversation
+                </button>
               )}
             </motion.div>
-          ))
-        )}
+          )}
+        </AnimatePresence>
         <div ref={messagesEndRef} />
       </div>
 
       {/* Input */}
-      <div className="p-3 border-t border-bg-border flex-shrink-0">
+      <div className="p-3 border-t border-[#1e1e1e] flex-shrink-0">
         <div className="flex items-end gap-2">
           <textarea
             ref={inputRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Ask about your code..."
+            placeholder={currentMode.placeholder}
             rows={1}
-            className="flex-1 bg-bg-elevated border border-bg-border rounded-xl px-3 py-2 text-xs text-text-primary placeholder:text-text-muted resize-none focus:outline-none focus:border-accent/50 transition-colors leading-relaxed"
-            style={{ minHeight: 36, maxHeight: 100 }}
+            className="flex-1 bg-[#141414] border border-[#2a2a2a] rounded-xl px-3 py-2 text-xs text-white/80 placeholder:text-white/20 resize-none focus:outline-none focus:border-violet-500/50 transition-colors leading-relaxed"
+            style={{ minHeight: 36, maxHeight: 120 }}
           />
           <button
             onClick={() => send()}
             disabled={!input.trim() || loading}
-            className="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-xl bg-accent hover:bg-accent-hover text-white disabled:opacity-40 transition-all"
+            className="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-xl bg-violet-600 hover:bg-violet-500 text-white disabled:opacity-30 transition-all"
           >
             {loading ? <Loader size={13} /> : <Send size={13} />}
           </button>
