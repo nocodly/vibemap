@@ -59,16 +59,16 @@ export default function Header() {
         </>
       )}
 
-      {/* User avatar */}
+      {/* User avatar + logout */}
       {user && (
-        <div className="flex items-center gap-1.5 flex-shrink-0">
-          <img src={user.avatar_url} alt={user.login} className="w-5 h-5 rounded-full" />
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <img src={user.avatar_url} alt={user.login} className="w-6 h-6 rounded-full" />
           <button
             onClick={() => { logout(); navigate('/') }}
-            className="p-1 rounded hover:bg-bg-elevated text-text-muted hover:text-text-secondary transition-colors"
+            className="p-1.5 rounded-lg hover:bg-bg-elevated text-text-muted hover:text-text-secondary transition-colors"
             title="Logout"
           >
-            <LogOut size={12} />
+            <LogOut size={14} />
           </button>
         </div>
       )}

@@ -28,18 +28,18 @@ function DirNode({ node, depth }) {
     <div>
       <button
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center gap-1 px-2 py-0.5 hover:bg-bg-hover text-text-secondary hover:text-text-primary text-xs transition-colors rounded"
-        style={{ paddingLeft: `${8 + depth * 12}px` }}
+        className="w-full flex items-center gap-1.5 px-2 py-1 hover:bg-bg-hover text-text-secondary hover:text-text-primary text-xs font-medium transition-colors rounded"
+        style={{ paddingLeft: `${8 + depth * 14}px` }}
       >
-        <span className="text-text-muted w-3 flex-shrink-0">
-          {open ? <ChevronDown size={11} /> : <ChevronRight size={11} />}
+        <span className="text-text-muted w-3.5 flex-shrink-0">
+          {open ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
         </span>
         {open ? (
-          <FolderOpen size={13} className="text-yellow-500/70 flex-shrink-0" />
+          <FolderOpen size={14} className="text-yellow-500/70 flex-shrink-0" />
         ) : (
-          <Folder size={13} className="text-yellow-500/70 flex-shrink-0" />
+          <Folder size={14} className="text-yellow-500/70 flex-shrink-0" />
         )}
-        <span className="truncate ml-1">{node.name}</span>
+        <span className="truncate ml-0.5">{node.name}</span>
       </button>
 
       {open && (
@@ -85,14 +85,14 @@ function FileNode({ node, depth }) {
   return (
     <button
       onClick={handleClick}
-      className={`w-full flex items-center gap-1.5 px-2 py-0.5 text-xs transition-colors rounded ${
+      className={`w-full flex items-center gap-1.5 px-2 py-1 text-xs font-medium transition-colors rounded ${
         isActive
           ? 'bg-accent/15 text-accent'
           : 'text-text-secondary hover:bg-bg-hover hover:text-text-primary'
       }`}
-      style={{ paddingLeft: `${20 + depth * 12}px` }}
+      style={{ paddingLeft: `${22 + depth * 14}px` }}
     >
-      <FileIcon filename={node.name} size={12} />
+      <FileIcon filename={node.name} size={13} />
       <span className="truncate">{node.name}</span>
     </button>
   )

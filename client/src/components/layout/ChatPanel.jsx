@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Send, MessageSquare, Sparkles, Map, Bug, Plus } from 'lucide-react'
+import { Send, MessageSquare, Map, Bug, Plus } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAIStore } from '../../store/aiStore.js'
@@ -33,7 +33,7 @@ const MODES = {
       'What are the main entry points?',
       'Where is the database logic?',
     ],
-    buildPrompt: (input, context) => input,
+    buildPrompt: (input) => input,
   },
   where: {
     icon: Map,
@@ -50,7 +50,7 @@ const MODES = {
   },
   debug: {
     icon: Bug,
-    label: 'Debug error',
+    label: 'Debug',
     placeholder: 'Paste your error message here...',
     suggestions: [
       'TypeError: Cannot read property of undefined',
@@ -76,7 +76,6 @@ export default function ChatPanel() {
 
   const currentMode = MODES[mode]
 
-  // Clear messages when mode changes
   useEffect(() => {
     setMessages([])
     setInput('')
@@ -109,11 +108,7 @@ export default function ChatPanel() {
     setMessages([...newMessages, { role: 'assistant', content: '' }])
 
     try {
-      const apiMessages = [
-        ...messages,
-        { role: 'user', content: userContent },
-      ]
-
+      const apiMessages = [...messages, { role: 'user', content: userContent }]
       await streamChat({
         provider, apiKey, model,
         system: buildContext(),
@@ -140,10 +135,10 @@ export default function ChatPanel() {
     return (
       <aside className="w-full flex-shrink-0 border-l border-[#1e1e1e] bg-[#111] flex items-center justify-center p-6">
         <div className="text-center">
-          <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center mx-auto mb-3">
-            <MessageSquare size={18} className="text-violet-400" />
+          <div className="w-12 h-12 rounded-xl bg-violet-500/10 flex items-center justify-center mx-auto mb-3">
+            <MessageSquare size={22} className="text-violet-400" />
           </div>
-          <p className="text-white/30 text-xs leading-relaxed">
+          <p className="text-white/40 text-sm leading-relaxed">
             Add your AI key to chat with your codebase
           </p>
         </div>
@@ -153,26 +148,27 @@ export default function ChatPanel() {
 
   return (
     <aside className="w-full flex-shrink-0 border-l border-[#1e1e1e] bg-[#111] flex flex-col overflow-hidden">
+
       {/* Mode tabs */}
       <div className="flex border-b border-[#1e1e1e] flex-shrink-0">
         {Object.entries(MODES).map(([key, m]) => (
           <button
             key={key}
             onClick={() => setMode(key)}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-[11px] font-semibold transition-colors border-b-2 ${
+            className={`flex-1 flex items-center justify-center gap-2 py-3.5 text-xs font-semibold transition-colors border-b-2 ${
               mode === key
                 ? 'border-violet-500 text-violet-400 bg-violet-500/5'
-                : 'border-transparent text-white/30 hover:text-white/50'
+                : 'border-transparent text-white/35 hover:text-white/60'
             }`}
           >
-            <m.icon size={12} />
+            <m.icon size={14} />
             {m.label}
           </button>
         ))}
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+      <div className="flex-1 overflow-y-auto p-4 space-y-2.5">
         <AnimatePresence mode="wait">
           {messages.length === 0 ? (
             <motion.div
@@ -181,16 +177,16 @@ export default function ChatPanel() {
               animate={{ opacity: 1 }}
               className="space-y-2"
             >
-              <p className="text-white/30 text-xs font-medium px-1 mb-3">
+              <p className="text-white/35 text-xs font-medium px-1 mb-4">
                 {mode === 'chat' && 'Ask anything about your codebase:'}
                 {mode === 'where' && 'What feature do you want to add?'}
-                {mode === 'debug' && 'Paste your error and I\'ll find the cause:'}
+                {mode === 'debug' && "Paste your error and I'll find the cause:"}
               </p>
               {currentMode.suggestions.map((s) => (
                 <button
                   key={s}
                   onClick={() => send(s)}
-                  className="w-full text-left px-4 py-3 rounded-xl border border-[#242424] hover:border-violet-500/30 hover:bg-violet-500/5 text-white/50 hover:text-white/70 text-xs font-medium transition-all leading-relaxed"
+                  className="w-full text-left px-4 py-3.5 rounded-xl border border-[#262626] hover:border-violet-500/40 hover:bg-violet-500/5 text-white/55 hover:text-white/80 text-sm font-medium transition-all leading-snug"
                 >
                   {s}
                 </button>
@@ -206,14 +202,14 @@ export default function ChatPanel() {
                   className={msg.role === 'user' ? 'flex justify-end' : ''}
                 >
                   {msg.role === 'user' ? (
-                    <div className="max-w-[85%] bg-violet-500/10 border border-violet-500/20 rounded-xl px-3 py-2 text-white/80 text-xs">
+                    <div className="max-w-[88%] bg-violet-500/10 border border-violet-500/20 rounded-xl px-3.5 py-2.5 text-white/85 text-sm leading-relaxed">
                       {msg.content}
                     </div>
                   ) : (
-                    <div className="text-white/50 text-xs leading-relaxed prose prose-sm prose-invert max-w-none">
+                    <div className="text-white/60 text-sm leading-relaxed prose prose-sm prose-invert max-w-none">
                       <ReactMarkdown>{msg.content}</ReactMarkdown>
                       {loading && i === messages.length - 1 && !msg.content && (
-                        <span className="inline-block w-1.5 h-3 bg-violet-500 animate-pulse rounded" />
+                        <span className="inline-block w-1.5 h-4 bg-violet-500 animate-pulse rounded" />
                       )}
                     </div>
                   )}
@@ -222,9 +218,9 @@ export default function ChatPanel() {
               {messages.length > 0 && (
                 <button
                   onClick={() => setMessages([])}
-                  className="flex items-center gap-1 text-white/20 hover:text-white/40 text-[10px] transition-colors mx-auto"
+                  className="flex items-center gap-1.5 text-white/25 hover:text-white/50 text-xs transition-colors mx-auto pt-1"
                 >
-                  <Plus size={9} className="rotate-45" />
+                  <Plus size={11} className="rotate-45" />
                   New conversation
                 </button>
               )}
@@ -244,15 +240,15 @@ export default function ChatPanel() {
             onKeyDown={handleKeyDown}
             placeholder={currentMode.placeholder}
             rows={1}
-            className="flex-1 bg-[#141414] border border-[#2a2a2a] rounded-xl px-3.5 py-2.5 text-xs text-white/80 placeholder:text-white/25 resize-none focus:outline-none focus:border-violet-500/50 transition-colors leading-relaxed"
-            style={{ minHeight: 40, maxHeight: 120 }}
+            className="flex-1 bg-[#141414] border border-[#2a2a2a] rounded-xl px-4 py-3 text-sm text-white/80 placeholder:text-white/25 resize-none focus:outline-none focus:border-violet-500/50 transition-colors leading-relaxed"
+            style={{ minHeight: 44, maxHeight: 140 }}
           />
           <button
             onClick={() => send()}
             disabled={!input.trim() || loading}
-            className="w-9 h-9 flex-shrink-0 flex items-center justify-center rounded-xl bg-violet-600 hover:bg-violet-500 text-white disabled:opacity-30 transition-all"
+            className="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-violet-600 hover:bg-violet-500 text-white disabled:opacity-30 transition-all"
           >
-            {loading ? <Loader size={14} /> : <Send size={14} />}
+            {loading ? <Loader size={15} /> : <Send size={15} />}
           </button>
         </div>
       </div>

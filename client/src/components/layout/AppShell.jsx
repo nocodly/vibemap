@@ -51,7 +51,7 @@ export default function AppShell() {
 
         {/* Sidebar — hidden on mobile unless mobilePanel=files */}
         <div className={`
-          md:flex md:w-60 md:flex-shrink-0
+          md:flex md:w-64 md:flex-shrink-0
           ${mobilePanel === 'files' ? 'flex flex-1' : 'hidden md:flex'}
         `}>
           <Sidebar />

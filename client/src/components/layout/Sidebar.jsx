@@ -6,9 +6,9 @@ export default function Sidebar() {
   const { fileTree, loadingTree } = useRepoStore()
 
   return (
-    <aside className="w-60 flex-shrink-0 border-r border-bg-border bg-bg-surface flex flex-col overflow-hidden">
-      <div className="px-3 py-2.5 border-b border-bg-border flex-shrink-0">
-        <span className="text-text-muted text-xs font-medium uppercase tracking-wider">
+    <aside className="w-full flex-shrink-0 border-r border-bg-border bg-bg-surface flex flex-col overflow-hidden">
+      <div className="px-3 py-3 border-b border-bg-border flex-shrink-0">
+        <span className="text-text-muted text-xs font-semibold uppercase tracking-wider">
           Files
         </span>
       </div>
