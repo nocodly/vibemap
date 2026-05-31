@@ -71,35 +71,42 @@ export default function SemanticMap() {
       })
       setRawResult(result)
 
-      // Parse JSON — multiple strategies + auto-fix common issues
-      let parsed = null
-
-      function fixJson(str) {
-        return str
-          .replace(/,\s*([}\]])/g, '$1')  // trailing commas
-          .replace(/([{,]\s*)(\w+)\s*:/g, '$1"$2":')  // unquoted keys
-          .trim()
+      // Reliable JSON extractor — counts brackets instead of regex
+      function extractJsonObject(str) {
+        const start = str.indexOf('{')
+        if (start === -1) return null
+        let depth = 0
+        for (let i = start; i < str.length; i++) {
+          if (str[i] === '{') depth++
+          else if (str[i] === '}') {
+            depth--
+            if (depth === 0) return str.slice(start, i + 1)
+          }
+        }
+        // JSON incomplete — close all open brackets
+        const partial = str.slice(start)
+        const opens = (partial.match(/\[/g) || []).length
+        const closes = (partial.match(/\]/g) || []).length
+        const arrFix = ']'.repeat(Math.max(0, opens - closes))
+        return partial + arrFix + '}'
       }
 
-      const candidates = [
-        result.match(/```json\s*([\s\S]*?)\s*```/)?.[1],
-        result.match(/```\s*([\s\S]*?)\s*```/)?.[1],
-        result.match(/\{[\s\S]*\}/)?.[0],
-        result,
-      ]
+      function removeTrailingCommas(str) {
+        return str.replace(/,\s*([\]\}])/g, '$1')
+      }
 
-      for (const raw of candidates) {
-        if (!raw) continue
-        for (const attempt of [raw, fixJson(raw)]) {
+      let parsed = null
+      const raw = extractJsonObject(result)
+
+      if (raw) {
+        for (const attempt of [raw, removeTrailingCommas(raw)]) {
           try {
             const p = JSON.parse(attempt)
             if (p?.blocks?.length) { parsed = p; break }
           } catch {}
         }
-        if (parsed) break
       }
 
-      // Debug: log raw result if parsing fails
       if (!parsed?.blocks) {
         console.error('Raw AI response:', result)
         throw new Error('Could not parse semantic map — try again')
