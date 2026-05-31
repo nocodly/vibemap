@@ -14,6 +14,9 @@ const PORT = process.env.PORT || 3001
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const clientDist = join(__dirname, '../../client/dist')
 
+// Trust Railway's reverse proxy so express-rate-limit reads X-Forwarded-For correctly
+app.set('trust proxy', 1)
+
 // Security
 app.use(helmet({ contentSecurityPolicy: false }))
 app.use(express.json({ limit: '2mb' }))
