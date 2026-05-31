@@ -37,7 +37,7 @@ const MODES = {
   },
   where: {
     icon: Map,
-    label: 'Where to add?',
+    label: 'Where?',
     placeholder: 'I want to add Stripe payments...',
     suggestions: [
       'I want to add user notifications',
@@ -155,14 +155,14 @@ export default function ChatPanel() {
           <button
             key={key}
             onClick={() => setMode(key)}
-            className={`flex-1 flex items-center justify-center gap-2 py-3.5 text-xs font-semibold transition-colors border-b-2 ${
+            className={`flex-1 flex items-center justify-center gap-2 px-3 py-4 text-xs font-semibold transition-colors border-b-2 ${
               mode === key
                 ? 'border-violet-500 text-violet-400 bg-violet-500/5'
                 : 'border-transparent text-white/35 hover:text-white/60'
             }`}
           >
             <m.icon size={14} />
-            {m.label}
+            <span>{m.label}</span>
           </button>
         ))}
       </div>
@@ -232,7 +232,7 @@ export default function ChatPanel() {
 
       {/* Input */}
       <div className="p-4 border-t border-[#1e1e1e] flex-shrink-0">
-        <div className="flex items-end gap-2">
+        <div className="flex items-end bg-[#161616] border border-[#2a2a2a] rounded-2xl focus-within:border-violet-500/50 transition-colors">
           <textarea
             ref={inputRef}
             value={input}
@@ -240,15 +240,15 @@ export default function ChatPanel() {
             onKeyDown={handleKeyDown}
             placeholder={currentMode.placeholder}
             rows={1}
-            className="flex-1 bg-[#141414] border border-[#2a2a2a] rounded-xl px-4 py-3 text-sm text-white/80 placeholder:text-white/25 resize-none focus:outline-none focus:border-violet-500/50 transition-colors leading-relaxed"
-            style={{ minHeight: 44, maxHeight: 140 }}
+            className="flex-1 bg-transparent px-4 py-3 text-sm text-white/80 placeholder:text-white/30 resize-none focus:outline-none leading-relaxed"
+            style={{ minHeight: 46, maxHeight: 140 }}
           />
           <button
             onClick={() => send()}
             disabled={!input.trim() || loading}
-            className="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-xl bg-violet-600 hover:bg-violet-500 text-white disabled:opacity-30 transition-all"
+            className="m-2 w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-xl bg-violet-600 hover:bg-violet-500 text-white disabled:opacity-30 disabled:bg-[#2a2a2a] transition-all"
           >
-            {loading ? <Loader size={15} /> : <Send size={15} />}
+            {loading ? <Loader size={14} /> : <Send size={14} />}
           </button>
         </div>
       </div>
