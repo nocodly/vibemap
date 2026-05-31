@@ -28,10 +28,12 @@ export default function FileViewer() {
   const [analysis, setAnalysis] = useState(null)
   const [analyzing, setAnalyzing] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [showAnalysis, setShowAnalysis] = useState(true)
 
   // Reset analysis when file changes
   useEffect(() => {
     setAnalysis(null)
+    setShowAnalysis(true)
   }, [openFile?.path])
 
   async function analyzeFile() {
@@ -116,17 +118,33 @@ export default function FileViewer() {
         ) : (
           <div className="flex flex-col">
             {/* AI Analysis */}
-            {(analysis || analyzing) && (
-              <div className="mx-4 mt-4 p-4 rounded-xl border border-accent/20 bg-accent/5">
-                <div className="flex items-center gap-2 mb-3">
-                  <Sparkles size={13} className="text-accent" />
+            {(analysis || analyzing) && showAnalysis && (
+              <div className="mx-4 mt-4 rounded-xl border border-accent/20 bg-accent/5 overflow-hidden">
+                <div className="flex items-center gap-2 px-4 py-2.5 border-b border-accent/10">
+                  <Sparkles size={12} className="text-accent" />
                   <span className="text-accent text-xs font-medium">AI Analysis</span>
                   {analyzing && <Loader size={12} />}
+                  <button
+                    onClick={() => setShowAnalysis(false)}
+                    className="ml-auto p-0.5 rounded hover:bg-white/10 text-text-muted hover:text-text-secondary transition-colors"
+                    title="Close analysis"
+                  >
+                    <X size={12} />
+                  </button>
                 </div>
-                <div className="prose prose-sm prose-invert max-w-none text-text-secondary text-xs leading-relaxed">
+                <div className="px-4 py-3 prose prose-sm prose-invert max-w-none text-text-secondary text-xs leading-relaxed">
                   <ReactMarkdown>{analysis}</ReactMarkdown>
                 </div>
               </div>
+            )}
+            {analysis && !showAnalysis && (
+              <button
+                onClick={() => setShowAnalysis(true)}
+                className="mx-4 mt-3 flex items-center gap-1.5 text-xs text-accent/60 hover:text-accent transition-colors"
+              >
+                <Sparkles size={11} />
+                Show AI analysis
+              </button>
             )}
 
             {/* Code */}
