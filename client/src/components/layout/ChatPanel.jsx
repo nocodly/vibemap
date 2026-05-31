@@ -101,7 +101,7 @@ export default function ChatPanel() {
     if (!userMsg || loading || !isConfigured()) return
 
     setInput('')
-    if (inputRef.current) inputRef.current.style.height = '46px'
+    if (inputRef.current) inputRef.current.style.height = '56px'
     const userContent = currentMode.buildPrompt(userMsg)
     const newMessages = [...messages, { role: 'user', content: userMsg }]
     setMessages(newMessages)
@@ -248,7 +248,7 @@ export default function ChatPanel() {
             placeholder={currentMode.placeholder}
             rows={1}
             className="flex-1 bg-transparent px-4 py-3 text-sm text-white/80 placeholder:text-white/30 resize-none focus:outline-none leading-relaxed overflow-hidden"
-            style={{ minHeight: 46, maxHeight: 140 }}
+            style={{ minHeight: 56, maxHeight: 140 }}
           />
           <button
             onClick={() => send()}
