@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
-import { X, Sparkles, Copy, Check } from 'lucide-react'
+import { X, Sparkles, Copy, Check, ChevronLeft, Map } from 'lucide-react'
 import { useRepoStore } from '../../store/repoStore.js'
 import { useAIStore } from '../../store/aiStore.js'
 import { streamChat } from '../../ai/index.js'
@@ -69,7 +69,19 @@ export default function FileViewer() {
       className="flex-1 flex flex-col overflow-hidden"
     >
       {/* File header */}
-      <div className="h-9 border-b border-bg-border bg-bg-surface flex items-center px-4 gap-3 flex-shrink-0">
+      <div className="h-9 border-b border-bg-border bg-bg-surface flex items-center px-2 gap-2 flex-shrink-0">
+        {/* Back to map */}
+        <button
+          onClick={() => setOpenFile(null)}
+          className="flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-bg-elevated text-text-muted hover:text-text-secondary transition-colors flex-shrink-0 group"
+          title="Back to Project Map"
+        >
+          <ChevronLeft size={13} className="group-hover:-translate-x-0.5 transition-transform" />
+          <Map size={11} />
+        </button>
+
+        <div className="w-px h-4 bg-bg-border flex-shrink-0" />
+
         <FileIcon filename={openFile.name} size={13} />
         <span className="text-text-primary text-xs font-medium truncate flex-1">{openFile.path}</span>
 
@@ -93,12 +105,6 @@ export default function FileViewer() {
             {copied ? <Check size={13} className="text-green-400" /> : <Copy size={13} />}
           </button>
 
-          <button
-            onClick={() => setOpenFile(null)}
-            className="p-1.5 rounded hover:bg-bg-elevated text-text-muted hover:text-text-secondary transition-colors"
-          >
-            <X size={13} />
-          </button>
         </div>
       </div>
 

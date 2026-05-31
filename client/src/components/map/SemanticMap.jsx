@@ -23,16 +23,6 @@ function treeToText(node, prefix = '') {
   return result
 }
 
-const BLOCK_COLORS = {
-  auth: 'border-orange-500/30 bg-orange-500/5',
-  db: 'border-blue-500/30 bg-blue-500/5',
-  api: 'border-emerald-500/30 bg-emerald-500/5',
-  ui: 'border-purple-500/30 bg-purple-500/5',
-  config: 'border-yellow-500/30 bg-yellow-500/5',
-  util: 'border-gray-500/30 bg-gray-500/5',
-  payment: 'border-pink-500/30 bg-pink-500/5',
-  test: 'border-lime-500/30 bg-lime-500/5',
-}
 
 export default function SemanticMap() {
   const { selectedRepo, fileTree, semanticMap, setSemanticMap, loadingMap, setLoading } = useRepoStore()
@@ -184,7 +174,7 @@ export default function SemanticMap() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.06 }}
             >
-              <BlockCard block={block} colorClass={BLOCK_COLORS[block.color] || BLOCK_COLORS.util} />
+              <BlockCard block={block} />
             </motion.div>
           ))}
         </div>
