@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 
 const CACHE_PREFIX = 'vibemap-map-'
 
@@ -15,48 +16,56 @@ function saveMapToCache(repoFullName, map) {
   } catch {}
 }
 
-export const useRepoStore = create((set, get) => ({
-  selectedRepo: null,
-  fileTree: null,
-  openFile: null,
-  fileContent: null,
-  semanticMap: null,
-
-  // Loading states
-  loadingTree: false,
-  loadingFile: false,
-  loadingMap: false,
-
-  setRepo: (repo) => {
-    // Load cached map for this repo
-    const cachedMap = repo ? loadCachedMap(repo.full_name) : null
-    set({
-      selectedRepo: repo,
+export const useRepoStore = create(
+  persist(
+    (set, get) => ({
+      selectedRepo: null,
       fileTree: null,
       openFile: null,
       fileContent: null,
-      semanticMap: cachedMap,
-    })
-  },
+      semanticMap: null,
 
-  setFileTree: (tree) => set({ fileTree: tree }),
+      // Loading states
+      loadingTree: false,
+      loadingFile: false,
+      loadingMap: false,
 
-  setOpenFile: (file) => set({ openFile: file, fileContent: null }),
-  setFileContent: (content) => set({ fileContent: content }),
+      setRepo: (repo) => {
+        const cachedMap = repo ? loadCachedMap(repo.full_name) : null
+        set({
+          selectedRepo: repo,
+          fileTree: null,
+          openFile: null,
+          fileContent: null,
+          semanticMap: cachedMap,
+        })
+      },
 
-  setSemanticMap: (map) => {
-    const { selectedRepo } = get()
-    if (selectedRepo) saveMapToCache(selectedRepo.full_name, map)
-    set({ semanticMap: map })
-  },
+      setFileTree: (tree) => set({ fileTree: tree }),
 
-  setLoading: (key, value) => set({ [key]: value }),
+      setOpenFile: (file) => set({ openFile: file, fileContent: null }),
+      setFileContent: (content) => set({ fileContent: content }),
 
-  clearRepo: () => set({
-    selectedRepo: null,
-    fileTree: null,
-    openFile: null,
-    fileContent: null,
-    semanticMap: null,
-  }),
-}))
+      setSemanticMap: (map) => {
+        const { selectedRepo } = get()
+        if (selectedRepo) saveMapToCache(selectedRepo.full_name, map)
+        set({ semanticMap: map })
+      },
+
+      setLoading: (key, value) => set({ [key]: value }),
+
+      clearRepo: () => set({
+        selectedRepo: null,
+        fileTree: null,
+        openFile: null,
+        fileContent: null,
+        semanticMap: null,
+      }),
+    }),
+    {
+      name: 'vibemap-repo',
+      // Only persist selectedRepo — everything else reloads fresh
+      partialize: (state) => ({ selectedRepo: state.selectedRepo }),
+    }
+  )
+)
