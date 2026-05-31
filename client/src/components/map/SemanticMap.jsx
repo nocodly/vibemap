@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Sparkles, Map, RefreshCw } from 'lucide-react'
+import { jsonrepair } from 'jsonrepair'
 import { useRepoStore } from '../../store/repoStore.js'
 import { useAIStore } from '../../store/aiStore.js'
 import { streamChat } from '../../ai/index.js'
@@ -71,49 +72,21 @@ export default function SemanticMap() {
       })
       setRawResult(result)
 
-      // Stack-based JSON repair — closes brackets in correct LIFO order
-      function repairJson(str) {
-        const start = str.indexOf('{')
-        if (start === -1) return null
-        let s = str.slice(start)
-
-        const stack = [] // stores closing chars needed: '}' or ']'
-        let inString = false
-        let escaped = false
-
-        for (let i = 0; i < s.length; i++) {
-          const c = s[i]
-          if (escaped) { escaped = false; continue }
-          if (c === '\\' && inString) { escaped = true; continue }
-          if (c === '"') { inString = !inString; continue }
-          if (inString) continue
-          if (c === '{') stack.push('}')
-          else if (c === '[') stack.push(']')
-          else if (c === '}' || c === ']') stack.pop()
-        }
-
-        // 1. Close unclosed string
-        if (inString) s += '"'
-        // 2. Remove trailing comma
-        s = s.trimEnd().replace(/,\s*$/, '')
-        // 3. Close in correct LIFO order
-        s += stack.reverse().join('')
-        // 4. Remove trailing commas before ] or }
-        s = s.replace(/,\s*([\]\}])/g, '$1')
-
-        return s
-      }
-
       let parsed = null
-      const raw = repairJson(result)
 
-      if (raw) {
-        try {
-          const p = JSON.parse(raw)
-          if (p?.blocks?.length) parsed = p
-        } catch (e) {
-          console.error('JSON parse error:', e.message, '\nRepaired JSON:', raw.slice(0, 200))
-        }
+      // Extract the JSON object from the raw response (strip any markdown fences)
+      const jsonStart = result.indexOf('{')
+      const jsonEnd = result.lastIndexOf('}')
+      const rawJson = jsonStart !== -1 && jsonEnd !== -1
+        ? result.slice(jsonStart, jsonEnd + 1)
+        : result
+
+      try {
+        const repaired = jsonrepair(rawJson)
+        const p = JSON.parse(repaired)
+        if (p?.blocks?.length) parsed = p
+      } catch (e) {
+        console.error('JSON parse error after jsonrepair:', e.message, '\nRaw (first 300):', rawJson.slice(0, 300))
       }
 
       if (!parsed?.blocks) {
