@@ -101,6 +101,7 @@ export default function ChatPanel() {
     if (!userMsg || loading || !isConfigured()) return
 
     setInput('')
+    if (inputRef.current) inputRef.current.style.height = '46px'
     const userContent = currentMode.buildPrompt(userMsg)
     const newMessages = [...messages, { role: 'user', content: userMsg }]
     setMessages(newMessages)
@@ -129,6 +130,12 @@ export default function ChatPanel() {
       e.preventDefault()
       send()
     }
+  }
+
+  function autoResize(e) {
+    const el = e.target
+    el.style.height = 'auto'
+    el.style.height = Math.min(el.scrollHeight, 140) + 'px'
   }
 
   if (!isConfigured()) {
@@ -236,11 +243,11 @@ export default function ChatPanel() {
           <textarea
             ref={inputRef}
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={(e) => { setInput(e.target.value); autoResize(e) }}
             onKeyDown={handleKeyDown}
             placeholder={currentMode.placeholder}
             rows={1}
-            className="flex-1 bg-transparent px-4 py-3 text-sm text-white/80 placeholder:text-white/30 resize-none focus:outline-none leading-relaxed"
+            className="flex-1 bg-transparent px-4 py-3 text-sm text-white/80 placeholder:text-white/30 resize-none focus:outline-none leading-relaxed overflow-hidden"
             style={{ minHeight: 46, maxHeight: 140 }}
           />
           <button
