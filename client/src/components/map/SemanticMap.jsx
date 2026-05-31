@@ -44,6 +44,7 @@ export default function SemanticMap() {
   const [error, setError] = useState(null)
   const [streaming, setStreaming] = useState(false)
   const [rawStream, setRawStream] = useState('')
+  const [rawResult, setRawResult] = useState('')
 
   async function generateMap() {
     if (!isConfigured() || !fileTree) return
@@ -51,6 +52,7 @@ export default function SemanticMap() {
     setLoading('loadingMap', true)
     setStreaming(true)
     setRawStream('')
+    setRawResult('')
     setError(null)
 
     // Use flat full paths so AI returns correct paths
@@ -67,29 +69,41 @@ export default function SemanticMap() {
         }],
         onChunk: (_, full) => setRawStream(full),
       })
+      setRawResult(result)
 
-      // Parse JSON — handle markdown code blocks and malformed JSON
+      // Parse JSON — multiple strategies + auto-fix common issues
       let parsed = null
-      const attempts = [
-        // 1. JSON inside ```json ... ```
-        result.match(/```json\s*([\s\S]*?)\s*```/)?.[1],
-        // 2. JSON inside ``` ... ```
-        result.match(/```\s*([\s\S]*?)\s*```/)?.[1],
-        // 3. Raw JSON object
-        result.match(/\{[\s\S]*\}/)?.[0],
-      ]
 
-      for (const attempt of attempts) {
-        if (!attempt) continue
-        try {
-          parsed = JSON.parse(attempt)
-          break
-        } catch {
-          // try next
-        }
+      function fixJson(str) {
+        return str
+          .replace(/,\s*([}\]])/g, '$1')  // trailing commas
+          .replace(/([{,]\s*)(\w+)\s*:/g, '$1"$2":')  // unquoted keys
+          .trim()
       }
 
-      if (!parsed?.blocks) throw new Error('Could not parse semantic map — try again')
+      const candidates = [
+        result.match(/```json\s*([\s\S]*?)\s*```/)?.[1],
+        result.match(/```\s*([\s\S]*?)\s*```/)?.[1],
+        result.match(/\{[\s\S]*\}/)?.[0],
+        result,
+      ]
+
+      for (const raw of candidates) {
+        if (!raw) continue
+        for (const attempt of [raw, fixJson(raw)]) {
+          try {
+            const p = JSON.parse(attempt)
+            if (p?.blocks?.length) { parsed = p; break }
+          } catch {}
+        }
+        if (parsed) break
+      }
+
+      // Debug: log raw result if parsing fails
+      if (!parsed?.blocks) {
+        console.error('Raw AI response:', result)
+        throw new Error('Could not parse semantic map — try again')
+      }
       setSemanticMap(parsed)
     } catch (err) {
       setError(err.message)
@@ -146,12 +160,20 @@ export default function SemanticMap() {
   // Error
   if (error) {
     return (
-      <div className="flex-1 flex items-center justify-center p-8">
-        <div className="text-center">
+      <div className="flex-1 overflow-y-auto p-8">
+        <div className="max-w-lg mx-auto">
           <p className="text-red-400 text-sm mb-4">{error}</p>
+          {rawResult && (
+            <div className="mb-4">
+              <p className="text-text-muted text-xs mb-1">Raw AI response (for debugging):</p>
+              <pre className="text-[10px] text-text-secondary bg-bg-elevated border border-bg-border rounded-lg p-3 overflow-x-auto max-h-48 leading-relaxed">
+                {rawResult.slice(0, 1000)}
+              </pre>
+            </div>
+          )}
           <button
             onClick={generateMap}
-            className="flex items-center gap-2 px-4 py-2 bg-bg-elevated border border-bg-border rounded-xl text-text-secondary text-sm hover:text-text-primary transition-colors mx-auto"
+            className="flex items-center gap-2 px-4 py-2 bg-bg-elevated border border-bg-border rounded-xl text-text-secondary text-sm hover:text-text-primary transition-colors"
           >
             <RefreshCw size={13} />
             Try again

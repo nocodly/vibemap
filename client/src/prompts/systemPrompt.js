@@ -56,22 +56,16 @@ Be specific to this exact code, not generic.`
 
 // Prompt to build semantic map from file tree
 export function buildSemanticMapPrompt(fileTreeText, repoName) {
-  return `Analyze the file structure of "${repoName}" and group files into logical semantic blocks.
+  return `You are a JSON API. Respond with ONLY a JSON object, nothing else. No markdown, no explanation, no code fences.
 
-File tree:
-\`\`\`
-${fileTreeText.slice(0, 5000)}
-\`\`\`
+Analyze these files from the project "${repoName}" and group them into 4-8 logical blocks.
 
-IMPORTANT: Return ONLY a valid JSON object. No explanation, no markdown, no code blocks. Just the raw JSON.
+Files:
+${fileTreeText.slice(0, 4000)}
 
-Format:
-{"blocks":[{"name":"Authentication","color":"auth","description":"Handles user login, registration, JWT tokens","files":["src/auth/login.js"],"icon":"🔐"}]}
+Respond with this exact JSON structure (replace values with real data):
+{"blocks":[{"name":"Block Name","color":"api","description":"One sentence description","files":["exact/file/path.js"],"icon":"emoji"}]}
 
-Rules:
-- color must be one of: auth, db, api, ui, config, util, payment, test
-- Create 4-8 blocks that best represent this project
-- Only include files that exist in the tree above
-- No trailing commas in JSON
-- All strings must use double quotes`
+Color options: auth, db, api, ui, config, util, payment, test
+Use only files from the list above. Start your response with { and end with }`
 }
